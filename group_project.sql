@@ -58,14 +58,14 @@ CREATE TABLE ChannelMemebers (
 	MemberID  INT,
 	ChannelID INT,
 	MemberRole INT,
-    PRIMARY KEY (ChannelID,MemberID),
-	FOREIGN KEY (ChannelID) REFERENCES Channels(ChannelID),
+	PRIMARY KEY (ChannelID,MemberID),
 	FOREIGN KEY (MemberID) REFERENCES Users(UserID) ON DELETE CASCADE,
-    FOREIGN KEY (MemberRole) REFERENCES ChannelRoleTypes(RoleTypeID)
+	FOREIGN KEY (ChannelID) REFERENCES Channels(ChannelID),
+	FOREIGN KEY (MemberRole) REFERENCES ChannelRoleTypes(RoleTypeID)
 );
 CREATE TABLE ChannelRoleTypes(
-	RoleTypeID INT PRIMARY KEY,
-	RoleTypeName VARCHAR(100) NOT NULL
+	roleTypeID INT PRIMARY KEY,
+	roleTypeName VARCHAR(100) NOT NULL
 	canPost BOOLEAN,
 	canKick BOOLEAN,
 	canAssignRole BOOLEAN
