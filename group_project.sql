@@ -16,8 +16,8 @@ CREATE TABLE Friends (
     FriendID INT,
     isFavs BOOLEAN,
     PRIMARY KEY (UserID, FriendID),
-    FOREIGN KEY (UserID) REFERENCES Users(UserID),
-    FOREIGN KEY (FriendID) REFERENCES Users(UserID)
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (FriendID) REFERENCES Users(UserID) ON DELETE CASCADE
 );
 
 CREATE TABLE GroupChat (
@@ -30,7 +30,7 @@ CREATE TABLE GroupMembers (
     UserID INT,
     PRIMARY KEY (GroupID, UserID),
     FOREIGN KEY (GroupID) REFERENCES GroupChat(GroupID),
-    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
 );
 
 CREATE TABLE Messages (
@@ -38,7 +38,7 @@ CREATE TABLE Messages (
     UserID INT,
     generationTime TIMESTAMP,
     Text TEXT,
-    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
 );
 
 CREATE TABLE GroupMessages (
@@ -54,14 +54,23 @@ CREATE TABLE Channels (
     ChannelName VARCHAR(255)
 );
 
-CREATE TABLE ChannelMembers (
-    MemberID INT PRIMARY KEY,
-    ChannelID INT,
-    UserID INT,
-    isAdmin BOOLEAN,
-    FOREIGN KEY (ChannelID) REFERENCES Channels(ChannelID),
-    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+CREATE TABLE ChannelMemebers (
+	ChannelID INT,
+	MemberID INT,
+	MemberRole INT,
+    PRIMARY KEY (ChannelID,MemberID),
+	FOREIGN KEY (ChannelID) REFERENCES Channels(ChannelID),
+	FOREIGN KEY (MemberID) REFERENCES Users(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (MemberRole) REFERENCES ChannelRoleTypes(RoleTypeID)
 );
+CREATE TABLE ChannelRoleTypes(
+	RoleTypeID INT PRIMARY KEY,
+	RoleTypeName VARCHAR(100) NOT NULL
+	canPost BOOLEAN,
+	canKick BOOLEAN,
+	canAssignRole BOOLEAN
+);
+
 
 CREATE TABLE Posts (
     PostID INT PRIMARY KEY,
@@ -108,7 +117,7 @@ CREATE TABLE MessagePostStatus (
     PRIMARY KEY (MsgID, MsgStatusID, UserID),
     FOREIGN KEY (MsgID) REFERENCES Messages(MsgID),
     FOREIGN KEY (MsgStatusID) REFERENCES MessageStatusTypes(MsgStatusID),
-    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
 );
 
 CREATE TABLE PostStatusTypes (
@@ -124,7 +133,7 @@ CREATE TABLE ChannelPostStatus (
     PRIMARY KEY (PostID, PostStatusID, UserID),
     FOREIGN KEY (PostID) REFERENCES Posts(PostID),
     FOREIGN KEY (PostStatusID) REFERENCES PostStatusTypes(PostStatusID),
-    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
 );
 
 CREATE TABLE MessageReactions (
@@ -149,6 +158,24 @@ CREATE TABLE MessageReply (
     FOREIGN KEY (MsgID) REFERENCES Messages(MsgID),
     FOREIGN KEY (ReplyMsgID) REFERENCES Messages(MsgID)
 );
+
+-- Insert test Users
+INSERT INTO Users VALUES (5443270,'Kevin Leung', '','kl13hn@brocku.ca','','',TRUE,'kl13hn','','');
+INSERT INTO Users VALUES (5555555,'Test', '','test@brocku.ca','','',TRUE,'tester','','');
+INSERT INTO Users VALUES (2222222,'Test', '','test2@brocku.ca','','',TRUE,'tester2','','');
+-- Insert test Channels
+INSERT INTO Channels VALUES (1,'Test Channel');
+
+-- Insert Test ChannelRoleTypes
+INSERT INTO ChannelRoleTypes VALUES (1,'Owner',TRUE,TRUE,TRUE);
+INSERT INTO ChannelRoleTypes VALUES (2,'Member',False,False,False);
+INSERT INTO ChannelRoleTypes VALUES (3,'Mod',TRUE,False,False);
+INSERT INTO ChannelRoleTypes VALUES (4,'Admin',TRUE,TRUE,False);
+
+--Insert Test ChannelMembers
+INSERT INTO ChannelMembers VALUES (1,5443270,1);
+INSERT INTO ChannelMembers VALUES (1,5555555,2);
+INSERT INTO ChannelMembers VALUES (1,2222222,3);
 
 -- a. Retrieve the list of all users.
 SELECT * FROM Users;
@@ -198,5 +225,20 @@ WHERE GroupID = 3p32project AND Users.AvailabilityStatus = TRUE;
 SELECT Users.UserID, Users.Name FROM Users
 JOIN ChannelMembers ON Users.UserID = ChannelMembers.UserID
 WHERE ChannelID = 3p32channel AND Users.AvailabilityStatus = TRUE;
+
+-- h. For a Given chat, retrieve its creator
+SELECT u.name
+FROM Users u JOIN ChannelMembers c ON u.UserID = c.MemberID
+WHERE u.MemberRole = 1;
+
+-- i. For a given chat, retrieve all its admins (including the creator)
+SELECT u.name
+FROM Users u JOIN ChannelMembers c ON u.UserID = c.MemberID
+WHERE u.MemberRole != 2;
+
+--j. For a given chat admin, retrieve their permissions
+SELECT u.name, cm.ChannelID, crt.canPost, crt.canKick, crt.canAssignRole
+FROM Users u JOIN ChannelMembers cm ON u.UserID = cm.MemberID
+JOIN ChannelRoleTypes crt ON cm.MemberRole = crt.RoleTypeiD
 
 
