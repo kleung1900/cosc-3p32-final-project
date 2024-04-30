@@ -55,8 +55,8 @@ CREATE TABLE Channels (
 );
 
 CREATE TABLE ChannelMemebers (
+	MemberID  INT,
 	ChannelID INT,
-	MemberID INT,
 	MemberRole INT,
     PRIMARY KEY (ChannelID,MemberID),
 	FOREIGN KEY (ChannelID) REFERENCES Channels(ChannelID),
